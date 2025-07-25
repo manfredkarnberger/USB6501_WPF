@@ -1,0 +1,26 @@
+﻿<Window x:Class="USB6501_WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:USB6501_WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <StackPanel Margin="20">
+
+        <TextBlock Text="High Zeit (ms):"/>
+        <TextBox Name="HighTimeTextBox" Text="500"/>
+
+        <TextBlock Text="Low Zeit (ms):"/>
+        <TextBox Name="LowTimeTextBox" Text="500"/>
+
+        <TextBlock Text="Wiederholungen (0 = unendlich):"/>
+        <TextBox Name="RepeatCountTextBox" Text="0"/>
+
+        <StackPanel Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
+            <Button Content="Start" Click="StartButton_Click" Width="80" Margin="0,0,10,0"/>
+            <Button Content="Stop" Click="StopButton_Click" Width="80"/>
+        </StackPanel>
+
+    </StackPanel>
+</Window>
