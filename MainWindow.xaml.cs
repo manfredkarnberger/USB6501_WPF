@@ -58,10 +58,30 @@ namespace USB6501_WPF
 
                 await ToggleOutputAsync(highMs, lowMs, repeatCount, _cts.Token);
             }
+            catch (TaskCanceledException)
+            {
+                // Ignorieren – erwartete Unterbrechung
+            }
             catch (DaqException ex)
             {
                 MessageBox.Show("DAQ Fehler: " + ex.Message);
+            }
+            finally
+            {
+                try
+                {
+                    if (_daqTask != null && _writer != null)
+                    {
+                        _writer.WriteSingleSampleSingleLine(true, false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Fehler beim Zurücksetzen des Ausgangs: " + ex.Message);
+                }
+
                 _daqTask?.Dispose();
+                _writer = null;
                 _daqTask = null;
                 _cts = null;
             }
