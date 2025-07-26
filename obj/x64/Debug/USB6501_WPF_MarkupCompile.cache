@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-M:\Repos\USB6501_WPF\obj\x64\Debug\
+D:\ws_VisualStudio\USB6501_WPF\obj\x64\Debug\
 USB6501_WPF
 none
 false
 DEBUG;TRACE
-M:\Repos\USB6501_WPF\App.xaml
+D:\ws_VisualStudio\USB6501_WPF\App.xaml
 1219584333
 
 51579654133
-14540332910
+141872269650
 MainWindow.xaml;
 
 False
