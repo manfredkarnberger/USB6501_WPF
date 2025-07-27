@@ -25,7 +25,6 @@ D:\ws_VisualStudio\USB6501_WPF\bin\x64\Debug\NationalInstruments.Common.dll
 D:\ws_VisualStudio\USB6501_WPF\bin\x64\Debug\NationalInstruments.DAQmx.xml
 D:\ws_VisualStudio\USB6501_WPF\bin\x64\Debug\NationalInstruments.Common.xml
 D:\ws_VisualStudio\USB6501_WPF\obj\x64\Debug\USB6501_WPF.csproj.AssemblyReference.cache
-D:\ws_VisualStudio\USB6501_WPF\obj\x64\Debug\USB6501_WPF.exe.config
 D:\ws_VisualStudio\USB6501_WPF\obj\x64\Debug\MainWindow.g.cs
 D:\ws_VisualStudio\USB6501_WPF\obj\x64\Debug\App.g.cs
 D:\ws_VisualStudio\USB6501_WPF\obj\x64\Debug\USB6501_WPF_MarkupCompile.cache

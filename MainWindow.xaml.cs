@@ -18,14 +18,12 @@ using NI=NationalInstruments.DAQmx;
 
 namespace USB6501_WPF
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        private NationalInstruments.DAQmx.Task _daqTask;  // <- Eindeutig!
+        private NationalInstruments.DAQmx.Task _daqTask;
         private DigitalSingleChannelWriter _writer;
         private CancellationTokenSource _cts;
+        private System.Threading.Tasks.Task _toggleTask;
 
         public MainWindow()
         {
@@ -36,7 +34,7 @@ namespace USB6501_WPF
         {
             if (_cts != null)
             {
-                MessageBox.Show("Läuft bereits.");
+                MessageBox.Show("Der Vorgang läuft bereits.");
                 return;
             }
 
@@ -44,27 +42,34 @@ namespace USB6501_WPF
                 !int.TryParse(LowTimeTextBox.Text, out int lowMs) || lowMs < 0 ||
                 !int.TryParse(RepeatCountTextBox.Text, out int repeatCount) || repeatCount < 0)
             {
-                MessageBox.Show("Ungültige Eingabe.");
+                MessageBox.Show("Bitte gültige Zahlen eingeben.");
                 return;
             }
 
             try
             {
-                _daqTask = new NationalInstruments.DAQmx.Task();
-                _daqTask.DOChannels.CreateChannel("Dev1/port0/line0", "", ChannelLineGrouping.OneChannelForEachLine);
-
-                _writer = new DigitalSingleChannelWriter(_daqTask.Stream);
                 _cts = new CancellationTokenSource();
 
-                await ToggleOutputAsync(highMs, lowMs, repeatCount, _cts.Token);
+                _daqTask = new NationalInstruments.DAQmx.Task();
+                _daqTask.DOChannels.CreateChannel("Dev1/port0/line0:7", "",
+                    ChannelLineGrouping.OneChannelForAllLines);
+
+                _writer = new DigitalSingleChannelWriter(_daqTask.Stream);
+
+                _toggleTask = ToggleOutputAsync(highMs, lowMs, repeatCount, _cts.Token);
+                await _toggleTask;
             }
             catch (TaskCanceledException)
             {
-                // Ignorieren – erwartete Unterbrechung
+                // Erwarten wir – nichts tun
             }
             catch (DaqException ex)
             {
                 MessageBox.Show("DAQ Fehler: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Allgemeiner Fehler: " + ex.Message);
             }
             finally
             {
@@ -72,55 +77,64 @@ namespace USB6501_WPF
                 {
                     if (_daqTask != null && _writer != null)
                     {
-                        _writer.WriteSingleSampleSingleLine(true, false);
+                        bool[] low = Enumerable.Repeat(false, 8).ToArray();
+                        _writer.WriteSingleSampleMultiLine(true, low);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Fehler beim Zurücksetzen des Ausgangs: " + ex.Message);
+                    Console.WriteLine("Fehler beim Rücksetzen: " + ex.Message);
                 }
 
-                _daqTask?.Dispose();
                 _writer = null;
+                _daqTask?.Dispose();
                 _daqTask = null;
+                _cts?.Dispose();
                 _cts = null;
+                _toggleTask = null;
             }
-        }
-
-        private void StopButton_Click(object sender, RoutedEventArgs e)
-        {
-            _cts?.Cancel();
-            _cts = null;
-
-            _writer?.WriteSingleSampleSingleLine(true, false); // LOW
-            _daqTask?.Dispose();
-            _daqTask = null;
         }
 
         private async System.Threading.Tasks.Task ToggleOutputAsync(int highMs, int lowMs, int repeatCount, CancellationToken token)
         {
-            int count = 0;
+            //bool[] high = Enumerable.Repeat(true, 8).ToArray();
+            //bool[] low = Enumerable.Repeat(false, 8).ToArray();
 
-            while (!token.IsCancellationRequested)
+            bool[] high = new bool[8] { false, true, false, true, false, true, false, true };
+            bool[] low = new bool[8] { true, false, true, false, true, false, true, false };
+
+            for (int i = 0; repeatCount == 0 || i < repeatCount; i++)
             {
-                _writer.WriteSingleSampleSingleLine(true, true);
+                token.ThrowIfCancellationRequested();
+                _writer.WriteSingleSampleMultiLine(true, high);
                 await System.Threading.Tasks.Task.Delay(highMs, token);
 
-                _writer.WriteSingleSampleSingleLine(true, false);
+                token.ThrowIfCancellationRequested();
+                _writer.WriteSingleSampleMultiLine(true, low);
                 await System.Threading.Tasks.Task.Delay(lowMs, token);
+            }
+        }
 
-                if (repeatCount > 0)
+        private async void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_cts != null)
+            {
+                _cts.Cancel();
+
+                try
                 {
-                    count++;
-                    if (count >= repeatCount)
-                        break;
+                    if (_toggleTask != null)
+                        await _toggleTask;
+                }
+                catch (TaskCanceledException)
+                {
+                    // Ignorieren
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Fehler beim Stoppen: " + ex.Message);
                 }
             }
-
-            _writer?.WriteSingleSampleSingleLine(true, false);
-            _daqTask?.Dispose();
-            _daqTask = null;
-            _cts = null;
         }
     }
 }
